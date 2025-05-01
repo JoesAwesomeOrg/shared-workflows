@@ -4,7 +4,7 @@ on:
 jobs:
   build:
     runs-on:
-      group: my-custom-runner-group
+      group: EP_CICD
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
